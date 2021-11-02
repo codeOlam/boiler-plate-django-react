@@ -9,6 +9,7 @@ from django.contrib.auth.models import (AbstractBaseUser,
 
 
 class UserManager(BaseUserManager):
+    use_in_migrations = True
 
     def create_user(self, email, password, **extra_fields):
         if not email:
@@ -36,7 +37,7 @@ class UserManager(BaseUserManager):
         if password is None:
             raise ValueError("Password can not be empty!")
 
-        user = self.model(email, **extra_fields)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.is_admin = True
         user.is_superuser = True
