@@ -1,4 +1,4 @@
-![Django Logo](/src/django-banner.jpg)
+![Django Logo](dj_react.png)
 
 ## About
 
@@ -29,9 +29,10 @@ This app features the following:
 ## Installations
 
 1. [installing Python3](https://www.python.org/downloads/)
-2. [installing Django 3.0](https://docs.djangoproject.com/en/3.0/topics/install/)
-3. [installing Virtualenv](https://www.geeksforgeeks.org/creating-python-virtual-environment-windows-linux/)
-4. installing requirements from requirements.txt. After activating vitualenv run:
+2. [installing Django 3.x](https://docs.djangoproject.com/en/3.2/topics/install/)
+3. [installing Django Rest Framework](https://www.django-rest-framework.org/#installation)
+4. [installing Virtualenv](https://www.geeksforgeeks.org/creating-python-virtual-environment-windows-linux/)
+5. installing requirements from requirements.txt. After activating vitualenv run:
 
 `(venv)path/to/app/src$ pip install -r requirements.txt `
 
@@ -44,9 +45,10 @@ This app features the following:
 
 1. After cloning this repo, make sure your virtualenv is ativated and change your path to $app root/.
 
-`(venv)path/to/app$`
+`(venv)path/to/app$ `
 
 2. install packages required by running
+
    `(venv)path/to/app$ pip install -r requirements.txt `
 
 3. change director to src/ make sure you are in the same directory where manage.py is then run
@@ -68,7 +70,8 @@ This App is not designed to be used full in deployement. You are free to make an
 ## Resources
 
 1. [Django 3.x Doc](https://docs.djangoproject.com/en/3.2/)
-2. [My Previous Repo](https://github.com/codeOlam/dj-multi-user-auth)
+2. [DRF 3.X](https://www.django-rest-framework.org/)
+3. [My Previous Repo](https://github.com/codeOlam/dj-multi-user-auth)
 
 ### Other Resources
 

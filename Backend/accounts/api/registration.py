@@ -6,7 +6,7 @@ from .serializers import RegisterSerializer
 
 class RegisterApi(generics.GenericAPIView):
 
-    serializers_class = RegisterSerializer
+    serializer_class = RegisterSerializer
 
     def post(self, request):
         user = request.data

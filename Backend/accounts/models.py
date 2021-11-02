@@ -19,7 +19,7 @@ class UserManager(BaseUserManager):
         now = timezone.now()
         user = self.model(
             email=self.normalize_email(email),
-            date_joined=now,
+            created_at=now,
             last_login=now,
             **extra_fields
         )
@@ -30,15 +30,15 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password, **extra_fields):
-        if not email:
+        if email is None:
             raise ValueError("email can not be empty!")
 
-        if not password:
+        if password is None:
             raise ValueError("Password can not be empty!")
 
         user = self.model(email, **extra_fields)
         user.set_password(password)
-        user.is_admin = True,
+        user.is_admin = True
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self._db)
@@ -69,6 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     updeted_at = models.DateTimeField('Date Updated', auto_now=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
+    # you can always defined your user attr below as a django model class
     is_usertype_a = models.BooleanField(default=False)
     is_usertype_b = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
