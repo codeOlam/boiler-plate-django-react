@@ -12,14 +12,6 @@ This app features the following:
 
 -- Allow you to CreateUser Type e.g: Teacher or Student at signup
 
--- Signup With Email Verification Token
-
--- Login
-
--- Very basic profile dashboard
-
--- simple permission to restrict unauthenticate users and unauthorized access
-
 ## Technology and Requirements
 
 1. Django==3.2.8
