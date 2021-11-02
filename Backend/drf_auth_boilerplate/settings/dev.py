@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Configuring django-environ
 env = environ.Env()
-env.read_env(BASE_DIR / '.env')
+env.read_env(BASE_DIR.parent / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -45,6 +45,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'drf_auth_boilerplate.urls'
+
+AUTH_USER_MODEL = "accounts.User"
 
 TEMPLATES = [
     {
