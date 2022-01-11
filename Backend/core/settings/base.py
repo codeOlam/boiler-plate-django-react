@@ -28,7 +28,7 @@ THIRD_PARTY_APP = [
 
 LOCAL_APP = [
     # other app
-    # 'accounts',
+    'accounts',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APP + LOCAL_APP
@@ -44,6 +44,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
+AUTH_USER_MODEL = "accounts.User"
 
 TEMPLATES = [
     {
