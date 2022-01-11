@@ -5,6 +5,7 @@ from django.contrib.auth.models import (AbstractBaseUser,
                                         BaseUserManager,
                                         PermissionsMixin)
 
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -23,7 +24,7 @@ class UserManager(BaseUserManager):
         )
 
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
 
         return user
 
@@ -39,7 +40,7 @@ class UserManager(BaseUserManager):
         user.is_admin = True
         user.is_superuser = True
         user.is_staff = True
-        user.save(using=self._db)
+        user.save()
 
         return user
 
