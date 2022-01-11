@@ -3,3 +3,4 @@ env/
 *.pyc
 migrations/
 db.sqlite3
+.DS_Store
