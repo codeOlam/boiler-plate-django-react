@@ -1,4 +1,6 @@
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from django.core.validators import validate_email
 
 from accounts.models import User
 
@@ -9,19 +11,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "password"]
+        fields = ['email', 'password']
 
     def validate(self, attrs):
-        email = attrs.get("email", " ")
-        password = attrs.get("password", "")
+        email = attrs.get('email', '')
 
-        if not email:
-            raise serializers.ValidationError("Email Required!")
+        try:
+            validate_email(email)
+        except validate_email.ValidationError:
+            raise serializers.ValidationError('This email is not valid')
 
-        if not password:
-            raise serializers.ValidationError("Password Required!")
+        return attrs
 
-        return super().validate(attrs)
-
-    def create(self, validate_data):
+    def creat(self, validate_data):
         return User.objects.create_user(**validate_data)

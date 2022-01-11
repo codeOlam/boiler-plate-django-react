@@ -2,5 +2,11 @@ env/
 .env
 *.pyc
 migrations/
+<<<<<<< HEAD
 db.sqlite3
 .DS_Store
+=======
+backend/db.sqlite3
+backend/core/db.sqlite3
+db.sqlite3
+>>>>>>> 57969fdd9ad1bb562227be33a10dcfe59b181984

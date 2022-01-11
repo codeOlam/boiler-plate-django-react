@@ -6,33 +6,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Configuring django-environ
 env = environ.Env()
-env.read_env(BASE_DIR.parent / '.env')
+env.read_env(BASE_DIR.parent / '.env') #You can set you .env file at root dir
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
 # Application definition
-
-INSTALLED_APPS = [
+DEFAULT_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
 
+THIRD_PARTY_APP = [
     # installed frameworks/apps
     'rest_framework',
+]
 
+LOCAL_APP = [
     # other app
     'accounts',
 ]
+
+INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APP + LOCAL_APP
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -44,7 +43,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'drf_auth_boilerplate.urls'
+ROOT_URLCONF = 'core.urls'
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -64,19 +63,11 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'drf_auth_boilerplate.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
