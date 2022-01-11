@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.shortcuts import render
+from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
 
 from rest_framework import generics, status
@@ -25,10 +26,25 @@ class RegisterApiView(generics.GenericAPIView):
 
         token = RefreshToken.for_user(user).access_token
 
-        current_sites = get_current_site(request).domain
+        current_sites = get_current_site(request)
         relative_link = reverse('email-verify')
-        site_url = 'http://'+current_sites+relative_link+"?token="+str(token)
-        email_body = 'Hi '+user.email+' \nUse link below to verify your email \n'+site_url
+        verify_email_url = 'http://'+current_sites.domain + \
+            relative_link+"?token="+str(token)
+
+        # to added email body from this view file, uncomment line below and comment the email_body line
+        # calling loader function and context variables.
+        # email_body = 'Hi '+user.email+' \nUse link below to verify your email \n'+verify_email_url
+
+        context = {
+            'user': user,
+            'site_name': current_sites.name,
+            'verify_email_url': verify_email_url
+        }
+        email_body = loader.render_to_string(
+            'registration/verify-email.html',
+            context
+        )
+
         email_data = {
             'email_subject': 'Please Verify your email',
             'email_body': email_body,
