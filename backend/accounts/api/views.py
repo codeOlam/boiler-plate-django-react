@@ -31,7 +31,9 @@ class RegisterApiView(generics.GenericAPIView):
         email_body = 'Hi '+user.email+' \nUse link below to verify your email \n'+site_url
         email_data = {
             'email_subject': 'Please Verify your email',
-            'email_body': email_body}
+            'email_body': email_body,
+            'to_email': user.email,
+        }
 
         Util.send_email(email_data)
 
