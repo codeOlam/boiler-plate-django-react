@@ -29,7 +29,6 @@ class RegisterApiView(generics.GenericAPIView):
         user = User.objects.get(email=user_data['email'])
 
         token = RefreshToken.for_user(user)
-        print('\ntoken: ', token)
 
         current_sites = get_current_site(request)
         relative_link = reverse('email-verify')
