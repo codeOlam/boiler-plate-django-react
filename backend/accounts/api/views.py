@@ -34,6 +34,7 @@ class RegisterApiView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
 
+        # This is used becacuse it is long lived compaired to access token
         token = RefreshToken.for_user(user)
 
         current_sites = get_current_site(request)
@@ -121,6 +122,7 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
             if user.user.is_verified:
                 return Response({'Message': 'This user is already verified'})
 
+            # This is used becacuse it is long lived compaired to access token
             token = RefreshToken.for_user(user)
 
             current_sites = get_current_site(request)
