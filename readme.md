@@ -17,6 +17,7 @@ This app features the following:
 1. Django==3.2.8
 2. Python3
 3. djangorestframework==3.12.4
+4. drf-yasg==1.20.0
 
 ## Installations
 
@@ -53,7 +54,7 @@ This app features the following:
 5. To run the development server
    `(venv)path/to/app/src$ python manage.py runserver `
 
-6. go to your web browser and enter 127.0.0.1:8000
+6. To open swagger docs go to your web browser and enter 127.0.0.1:8000/docs/ or 127.0.0.1:8000/redoc/
 
 ## Recommendations
 

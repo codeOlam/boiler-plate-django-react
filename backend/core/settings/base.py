@@ -21,13 +21,14 @@ DEFAULT_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# installed frameworks/apps
 THIRD_PARTY_APP = [
-    # installed frameworks/apps
     'rest_framework',
+    'drf_yasg',
 ]
 
+# local app
 LOCAL_APP = [
-    # other app
     'accounts',
 ]
 
@@ -70,10 +71,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

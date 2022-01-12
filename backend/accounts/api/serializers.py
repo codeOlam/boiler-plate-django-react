@@ -29,3 +29,11 @@ class ResendActivationEmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["email"]
+
+
+class EmailVerificationSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(max_length=555)
+
+    class Meta:
+        model = User
+        fields = ['token']
