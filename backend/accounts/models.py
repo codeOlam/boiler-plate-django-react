@@ -1,9 +1,12 @@
 from django.db import models
-import datetime
 from django.utils import timezone
-from django.contrib.auth.models import (AbstractBaseUser,
-                                        BaseUserManager,
-                                        PermissionsMixin)
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin
+)
+
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 
 class UserManager(BaseUserManager):
@@ -89,7 +92,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def tokens(self):
-        return ""
+        refresh_tokens = RefreshToken.for_user(self)
+        access_tokens = AccessToken.for_user(self)
+
+        return {
+            'refresh': str(refresh_tokens),
+            'access': str(access_tokens)
+        }
 
     def has_perm(self, perm, obj=None):
         return True
