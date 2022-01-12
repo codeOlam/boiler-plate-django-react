@@ -11,15 +11,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import User
 from accounts.utils import Util
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, ResendActivationEmailSerializer
 
 
 class RegisterApiView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        user = request.data
-        serializer = self.serializer_class(data=user)
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -32,10 +32,6 @@ class RegisterApiView(generics.GenericAPIView):
         relative_link = reverse('email-verify')
         verify_email_url = 'http://'+current_sites.domain + \
             relative_link+"?token="+str(token)
-
-        # to added email body from this view file, uncomment line below and comment the email_body line
-        # calling loader function and context variables.
-        # email_body = 'Hi '+user.email+' \nUse link below to verify your email \n'+verify_email_url
 
         context = {
             'user': user,
@@ -55,17 +51,59 @@ class RegisterApiView(generics.GenericAPIView):
 
         Util.send_email(email_data)
 
-        return Response(user_data, status=status.HTTP_201_CREATED)
+        return Response(
+            {'Message': 'Verification email has been sent to your email'},
+            status=status.HTTP_201_CREATED
+        )
+
+
+class ResendVerifyEmailViewApi(generics.GenericAPIView):
+    serializer_class = ResendActivationEmailSerializer
+
+    def post(self, request):
+        user_data = request.data
+        user_email = user_data['email']
+
+        try:
+            user = User.objects.get(email=user_email)
+
+            if user.user.is_verified:
+                return Response({'Message': 'This user is already verified'})
+
+            token = RefreshToken.for_user(user).access_token
+            current_sites = get_current_site(request)
+            relative_link = reverse('email-verify')
+            verify_email_url = 'http://'+current_sites.domain + \
+                relative_link+"?token="+str(token)
+            email_body = 'Hi '+user.email + \
+                ' \nUse link below to verify your email \n'+verify_email_url
+
+            email_data = {
+                'email_subject': 'Resent verification email',
+                'email_body': email_body,
+                'to_email': user.email,
+            }
+
+            Util.send_email(email_data)
+
+            return Response(
+                {'Message': 'Verification email has been resent to your email'},
+                status=status.HTTP_201_CREATED
+            )
+
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'This user does not exist.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class VerifyEmailApiView(generics.GenericAPIView):
     def get(self, request):
         token = request.GET.get('token')
-        print('token: ', token)
 
         try:
             payload = jwt.decode(token, settings.SECRET_KEY)
-            print("\n payload: ", payload)
             user = User.objects.get(id=payload['user_id'])
 
             # update user verification status
