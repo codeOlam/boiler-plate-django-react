@@ -1,5 +1,3 @@
-from os import stat
-from django.http import response
 from django.urls import reverse
 from django.conf import settings
 from django.template import loader
@@ -31,8 +29,8 @@ class RegisterApiView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        user_data = serializer.data
-        user = User.objects.get(email=user_data['email'])
+        serializer_payload = serializer.data
+        user = User.objects.get(email=serializer_payload['email'])
 
         # This is used becacuse it is long lived compaired to access token
         token = RefreshToken.for_user(user)
@@ -61,8 +59,11 @@ class RegisterApiView(generics.GenericAPIView):
         Util.send_email(email_data)
 
         response_payload = {
-            'user_data': user_data,
-            'Message': 'Verification email has been sent to your email'
+            'serializer_payload': serializer_payload,
+            'Status': {
+                'message': 'Verification email has been sent to your email',
+                'code': f"{status.HTTP_201_CREATED} CREATED"
+            },
         }
 
         return Response(
@@ -100,13 +101,31 @@ class VerifyEmailApiView(views.APIView):
                 user.is_verified = True
                 user.save()
 
-            return Response({'Success': 'Email successfully activate'}, status=status.HTTP_200_OK)
+            response_payload = {
+                'status': {
+                    'success': 'Email successfully activate',
+                    'code': f"{status.status.HTTP_200_OK} OK"
+                },
+            }
+            return Response(response_payload, status=status.HTTP_200_OK)
 
         except jwt.ExpiredSignatureError:
-            return Response({'error': 'Activation Link is expired!'}, status=status.HTTP_401_UNAUTHORIZED)
+            expired_response_payload = {
+                'status': {
+                    'failed': 'Activation Link is expired!',
+                    'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
+                },
+            }
+            return Response(expired_response_payload, status=status.HTTP_401_UNAUTHORIZED)
 
         except jwt.DecodeError:
-            return Response({'error': 'Invalid Activation Link!'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            decodeError_response_payload = {
+                'status': {
+                    'error': 'Invalid Activation Link!',
+                    'code': f"{status.HTTP_406_NOT_ACCEPTABLE} NOT_ACCEPTABLE"
+                },
+            }
+            return Response(decodeError_response_payload, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class ResendVerifyEmailViewApi(generics.GenericAPIView):
@@ -140,16 +159,22 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
 
             Util.send_email(email_data)
 
-            return Response(
-                {'Message': 'Verification email has been resent to your email'},
-                status=status.HTTP_201_CREATED
-            )
+            response_payload = {
+                'status': {
+                    'message': 'Verification email has been resent to your email',
+                    'code': f"{status.HTTP_201_CREATED} CREATED"
+                },
+            }
+            return Response(response_payload, status=status.HTTP_201_CREATED)
 
         except User.DoesNotExist:
-            return Response(
-                {'error': 'This user does not exist.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            doesNotExist_response_payload = {
+                'status': {
+                    'error': 'This user does not exist.',
+                    'code': f"{status.HTTP_404_NOT_FOUND} NOT_FOUND"
+                },
+            }
+            return Response(doesNotExist_response_payload, status=status.HTTP_404_NOT_FOUND)
 
 
 class LoginApiView(generics.GenericAPIView):
@@ -160,11 +185,19 @@ class LoginApiView(generics.GenericAPIView):
         serializer = self.serializer_class(data=payload)
         serializer.is_valid(raise_exception=True)
 
-        user_data = serializer.data
+        user = User.objects.get(email=payload['email'])
+        if user:
+            tokens = user.tokens()
+
+        serializer_payload = serializer.data
 
         response_payload = {
-            'user_data': user_data,
-            'Message': 'Login Successful'
+            'user_data': serializer_payload,
+            'status': {
+                'success': 'Login Successful',
+                'code': f"{status.HTTP_200_OK} OK"
+            },
+            'token': tokens
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
