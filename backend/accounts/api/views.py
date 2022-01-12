@@ -5,13 +5,15 @@ from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
 
 import jwt
-from rest_framework import generics, status
+from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from accounts.models import User
 from accounts.utils import Util
-from .serializers import RegisterSerializer, ResendActivationEmailSerializer
+from .serializers import RegisterSerializer, ResendActivationEmailSerializer, EmailVerificationSerializer
 
 
 class RegisterApiView(generics.GenericAPIView):
@@ -26,7 +28,8 @@ class RegisterApiView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
 
-        token = RefreshToken.for_user(user).access_token
+        token = RefreshToken.for_user(user)
+        print('\ntoken: ', token)
 
         current_sites = get_current_site(request)
         relative_link = reverse('email-verify')
@@ -98,12 +101,28 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
             )
 
 
-class VerifyEmailApiView(generics.GenericAPIView):
+class VerifyEmailApiView(views.APIView):
+    serializer_class = EmailVerificationSerializer
+
+    # This is specific for swagger doc, to help you test verification tokens
+    # manually.
+    token_param_config = openapi.Parameter(
+        'token',
+        in_=openapi.IN_QUERY,
+        description='Allow for manual input of verification token during test',
+        type=openapi.TYPE_STRING,
+    )
+
+    @swagger_auto_schema(manual_parameters=[token_param_config])
     def get(self, request):
         token = request.GET.get('token')
 
         try:
-            payload = jwt.decode(token, settings.SECRET_KEY)
+            payload = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=['HS256']
+            )
             user = User.objects.get(id=payload['user_id'])
 
             # update user verification status
