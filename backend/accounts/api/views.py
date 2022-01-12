@@ -1,8 +1,10 @@
+from os import stat
 from django.urls import reverse
-from django.shortcuts import render
+from django.conf import settings
 from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
 
+import jwt
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -57,5 +59,24 @@ class RegisterApiView(generics.GenericAPIView):
 
 
 class VerifyEmailApiView(generics.GenericAPIView):
-    def get(self):
-        pass
+    def get(self, request):
+        token = request.GET.get('token')
+        print('token: ', token)
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY)
+            print("\n payload: ", payload)
+            user = User.objects.get(id=payload['user_id'])
+
+            # update user verification status
+            if not user.is_verified:
+                user.is_verified = True
+                user.save()
+
+            return Response({'email': 'Email successfully activate'}, status=status.HTTP_200_OK)
+
+        except jwt.ExpiredSignatureError:
+            return Response({'error': 'Activation Link is expired!'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        except jwt.DecodeError:
+            return Response({'error': 'Invalid Activation Link!'}, status=status.HTTP_406_NOT_ACCEPTABLE)
