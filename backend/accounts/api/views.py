@@ -1,4 +1,5 @@
 from os import stat
+from django.http import response
 from django.urls import reverse
 from django.conf import settings
 from django.template import loader
@@ -13,7 +14,12 @@ from drf_yasg import openapi
 
 from accounts.models import User
 from accounts.utils import Util
-from .serializers import RegisterSerializer, ResendActivationEmailSerializer, EmailVerificationSerializer
+from .serializers import (
+    LoginSerializer,
+    RegisterSerializer,
+    EmailVerificationSerializer,
+    ResendActivationEmailSerializer
+)
 
 
 class RegisterApiView(generics.GenericAPIView):
@@ -53,10 +59,53 @@ class RegisterApiView(generics.GenericAPIView):
 
         Util.send_email(email_data)
 
+        response_payload = {
+            'user_data': user_data,
+            'Message': 'Verification email has been sent to your email'
+        }
+
         return Response(
-            {'Message': 'Verification email has been sent to your email'},
+            response_payload,
             status=status.HTTP_201_CREATED
         )
+
+
+class VerifyEmailApiView(views.APIView):
+    serializer_class = EmailVerificationSerializer
+
+    # This is specific for swagger doc, to help you test verification tokens
+    # manually.
+    token_param_config = openapi.Parameter(
+        'token',
+        in_=openapi.IN_QUERY,
+        description='Allow for manual input of verification token during test',
+        type=openapi.TYPE_STRING,
+    )
+
+    @swagger_auto_schema(manual_parameters=[token_param_config])
+    def get(self, request):
+        token = request.GET.get('token')
+
+        try:
+            payload = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=['HS256']
+            )
+            user = User.objects.get(id=payload['user_id'])
+
+            # update user verification status
+            if not user.is_verified:
+                user.is_verified = True
+                user.save()
+
+            return Response({'Success': 'Email successfully activate'}, status=status.HTTP_200_OK)
+
+        except jwt.ExpiredSignatureError:
+            return Response({'error': 'Activation Link is expired!'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        except jwt.DecodeError:
+            return Response({'error': 'Invalid Activation Link!'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 class ResendVerifyEmailViewApi(generics.GenericAPIView):
@@ -101,39 +150,19 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
             )
 
 
-class VerifyEmailApiView(views.APIView):
-    serializer_class = EmailVerificationSerializer
+class LoginApiView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
 
-    # This is specific for swagger doc, to help you test verification tokens
-    # manually.
-    token_param_config = openapi.Parameter(
-        'token',
-        in_=openapi.IN_QUERY,
-        description='Allow for manual input of verification token during test',
-        type=openapi.TYPE_STRING,
-    )
+    def post(self, request):
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
 
-    @swagger_auto_schema(manual_parameters=[token_param_config])
-    def get(self, request):
-        token = request.GET.get('token')
+        user_data = serializer.data
 
-        try:
-            payload = jwt.decode(
-                token,
-                settings.SECRET_KEY,
-                algorithms=['HS256']
-            )
-            user = User.objects.get(id=payload['user_id'])
+        response_payload = {
+            'user_data': user_data,
+            'Message': 'Login Successful'
+        }
 
-            # update user verification status
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-
-            return Response({'Success': 'Email successfully activate'}, status=status.HTTP_200_OK)
-
-        except jwt.ExpiredSignatureError:
-            return Response({'error': 'Activation Link is expired!'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        except jwt.DecodeError:
-            return Response({'error': 'Invalid Activation Link!'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        return Response(response_payload, status=status.HTTP_200_OK)
