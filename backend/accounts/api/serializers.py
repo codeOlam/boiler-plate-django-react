@@ -56,9 +56,14 @@ class LoginSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         email = attrs.get('email', '')
-        password = attrs.get('email', '')
+        password = attrs.get('password', '')
 
+        print('email: ', email)
+        print('password: ', password)
         user = auth.authenticate(email=email, password=password)
+
+        print('user: ', user)
+        # print('from validata tokens: ', user.tokens())
 
         if not user:
             raise AuthenticationFailed(
