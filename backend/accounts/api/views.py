@@ -72,7 +72,8 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
             if user.user.is_verified:
                 return Response({'Message': 'This user is already verified'})
 
-            token = RefreshToken.for_user(user).access_token
+            token = RefreshToken.for_user(user)
+
             current_sites = get_current_site(request)
             relative_link = reverse('email-verify')
             verify_email_url = 'http://'+current_sites.domain + \
@@ -129,7 +130,7 @@ class VerifyEmailApiView(views.APIView):
                 user.is_verified = True
                 user.save()
 
-            return Response({'email': 'Email successfully activate'}, status=status.HTTP_200_OK)
+            return Response({'Success': 'Email successfully activate'}, status=status.HTTP_200_OK)
 
         except jwt.ExpiredSignatureError:
             return Response({'error': 'Activation Link is expired!'}, status=status.HTTP_401_UNAUTHORIZED)
