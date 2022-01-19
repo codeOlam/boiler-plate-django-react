@@ -27,6 +27,7 @@ THIRD_PARTY_APP = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
+    'corsheaders',
 ]
 
 # local app
