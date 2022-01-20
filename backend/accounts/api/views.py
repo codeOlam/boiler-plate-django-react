@@ -2,6 +2,9 @@ from django.urls import reverse
 from django.conf import settings
 from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 
 import jwt
 from rest_framework import generics, status, views
@@ -208,10 +211,33 @@ class PasswordResetApiView(generics.GenericAPIView):
     serializer_class = PasswordRestSerializer
 
     def post(self, request):
-        # payload = request.data
-        payload = {'request': request, 'data': request.data}
+        payload = request.data
         serializer = self.serializer_class(data=payload)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid()
+        email = payload['email']
+
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+
+            uidb64 = urlsafe_base64_encode(user.id)
+            generate_token = PasswordResetTokenGenerator()
+            token = generate_token.make_token(user)
+
+            current_sites = get_current_site(request)
+            relative_link = reverse(
+                'password-token-verify', kwarg={'uidb64': uidb64, 'token': token})
+            verify_password_url = 'http://'+current_sites.domain + \
+                relative_link+"?token="+str(token)
+            email_body = 'Hi '+user.email + \
+                ' \nUse link below to reset your password \n'+verify_password_url
+
+            email_data = {
+                'email_subject': 'Password Reset',
+                'email_body': email_body,
+                'to_email': user.email,
+            }
+
+            Util.send_email(email_data)
 
         serializer_payload = serializer.data
 

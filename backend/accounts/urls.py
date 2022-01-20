@@ -16,6 +16,9 @@ urlpatterns = [
     path('resend-link/', ResendVerifyEmailApiView.as_view(), name='resend-link'),
     path('login/', LoginApiView.as_view(), name='login'),
     path('password-reset/', PasswordResetApiView.as_view(), name='password-reset'),
-    path('password-token-verify/<uidb64>/token/',
-         PasswordTokenVerifyApiView.as_view(), name='password-token-verify'),
+    path(
+        'password-token-verify/<uidb64>/<token>/',
+        PasswordTokenVerifyApiView.as_view(),
+        name='password-token-verify'
+    ),
 ]
