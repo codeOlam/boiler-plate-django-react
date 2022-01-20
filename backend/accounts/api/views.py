@@ -4,7 +4,7 @@ from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from django.utils.encoding import smart_str, smart_bytes, DjangoUnicodeDecodeError
 
 import jwt
 from rest_framework import generics, status, views
@@ -268,7 +268,7 @@ class PasswordResetApiView(generics.GenericAPIView):
 
 
 class PasswordTokenVerifyApiView(generics.GenericAPIView):
-    def get(self, request, uidb64, token):
+    def get(self, uidb64, token):
         try:
             userId = smart_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=userId)
