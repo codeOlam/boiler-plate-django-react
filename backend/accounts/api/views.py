@@ -262,5 +262,38 @@ class PasswordResetApiView(generics.GenericAPIView):
 
 
 class PasswordTokenVerifyApiView(generics.GenericAPIView):
-    def get(self, request, uid, token):
-        pass
+    def get(self, request, uidb64, token):
+        try:
+            userId = smart_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(id=userId)
+
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                response_payload = {
+                    'status': {
+                        'error': 'Token not valid, request a new token',
+                        'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
+                    }
+                }
+
+                return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
+
+            response_payload = {
+                'status': {
+                    'success': 'Token is valid',
+                    'code': f"{status.HTTP_200_OK} OK"
+                },
+                'uidb64': uidb64,
+                'token': token
+            }
+
+            return Response(response_payload, status=status.HTTP_200_OK)
+
+        except DjangoUnicodeDecodeError:
+            response_payload = {
+                'status': {
+                    'error': 'Token not valid, request a new token',
+                    'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
+                }
+            }
+
+            return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
