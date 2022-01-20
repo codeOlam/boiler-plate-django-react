@@ -82,7 +82,7 @@ class PasswordRestSerializer(serializers.ModelSerializer):
         fields = ['email']
 
 
-class SetNewPasswordSerializer(serializers.Serializer):
+class ResetPasswordCompleteSerializer(serializers.Serializer):
     password = serializers.CharField(
         max_length=68,
         min_length=6,

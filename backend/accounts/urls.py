@@ -1,4 +1,3 @@
-from os import name
 from django.urls import path
 
 from .api.views import (
@@ -8,6 +7,7 @@ from .api.views import (
     LoginApiView,
     PasswordResetApiView,
     PasswordTokenVerifyApiView,
+    ResetPasswordCompleteApiView,
 )
 
 urlpatterns = [
@@ -20,5 +20,10 @@ urlpatterns = [
         'password-token-verify/<uidb64>/<token>/',
         PasswordTokenVerifyApiView.as_view(),
         name='password-token-verify'
+    ),
+    path(
+        'reset-password-complete/',
+        ResetPasswordCompleteApiView.as_view(),
+        name='reset-password-complete'
     ),
 ]

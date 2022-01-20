@@ -21,7 +21,7 @@ from .serializers import (
     EmailVerificationSerializer,
     ResendActivationEmailSerializer,
     PasswordRestSerializer,
-    SetNewPasswordSerializer,
+    ResetPasswordCompleteSerializer,
 )
 
 
@@ -300,8 +300,8 @@ class PasswordTokenVerifyApiView(generics.GenericAPIView):
             return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class SetNewPasswordApiView(generics.GenericAPIView):
-    serializer_class = SetNewPasswordSerializer
+class ResetPasswordCompleteApiView(generics.GenericAPIView):
+    serializer_class = ResetPasswordCompleteSerializer
 
     def patch(self, request):
         payload = request.data
