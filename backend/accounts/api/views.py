@@ -219,13 +219,13 @@ class PasswordResetApiView(generics.GenericAPIView):
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
 
-            uidb64 = urlsafe_base64_encode(user.id)
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
             generate_token = PasswordResetTokenGenerator()
             token = generate_token.make_token(user)
 
             current_sites = get_current_site(request)
             relative_link = reverse(
-                'password-token-verify', kwarg={'uidb64': uidb64, 'token': token})
+                'password-token-verify', kwargs={'uidb64': uidb64, 'token': token})
             verify_password_url = 'http://'+current_sites.domain + \
                 relative_link+"?token="+str(token)
             email_body = 'Hi '+user.email + \
