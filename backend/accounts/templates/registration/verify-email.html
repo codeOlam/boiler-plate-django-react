@@ -1,4 +1,9 @@
-{% autoescape off %} Hi {{ user.email }}, This Email is sent to you from
-{{site_name}} Please To verify your email address click on the link to confirm
-your registration, {{ verify_email_url }} If you didn't request this email,
-please kindly ignore. Cheers! {% endautoescape %}
+{% autoescape off %} 
+  Hi {{ user.email }}, 
+  This Email is sent to you from {{site_name}}. 
+  Please To verify your email address click on the link to confirm
+  your registration, {{ verify_email_url }} 
+
+  If you didn't request this email, please kindly ignore. 
+  Cheers! 
+{% endautoescape %}

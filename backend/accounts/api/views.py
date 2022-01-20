@@ -21,6 +21,7 @@ from .serializers import (
     EmailVerificationSerializer,
     ResendActivationEmailSerializer,
     PasswordRestSerializer,
+    SetNewPasswordSerializer,
 )
 
 
@@ -297,3 +298,21 @@ class PasswordTokenVerifyApiView(generics.GenericAPIView):
             }
 
             return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class SetNewPasswordApiView(generics.GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+
+    def patch(self, request):
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+
+        response_payload = {
+            'status': {
+                'success': 'Password reset successful',
+                'code': f"{status.HTTP_200_OK} OK"
+            },
+        }
+
+        return Response(response_payload, status=status.HTTP_200_OK)
