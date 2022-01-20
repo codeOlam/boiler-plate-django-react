@@ -16,7 +16,8 @@ from .serializers import (
     LoginSerializer,
     RegisterSerializer,
     EmailVerificationSerializer,
-    ResendActivationEmailSerializer
+    ResendActivationEmailSerializer,
+    PasswordRestSerializer,
 )
 
 
@@ -128,7 +129,7 @@ class VerifyEmailApiView(views.APIView):
             return Response(decodeError_response_payload, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
-class ResendVerifyEmailViewApi(generics.GenericAPIView):
+class ResendVerifyEmailApiView(generics.GenericAPIView):
     serializer_class = ResendActivationEmailSerializer
 
     def post(self, request):
@@ -201,3 +202,18 @@ class LoginApiView(generics.GenericAPIView):
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
+
+
+class PasswordResetApiView(generics.GenericAPIView):
+    serializer_class = PasswordRestSerializer
+
+    def post(self, request):
+        # payload = request.data
+        payload = {'request': request, 'data': request.data}
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+
+
+class PasswordTokenVerifyApiView(generics.GenericAPIView):
+    def get(self, request, uid, token):
+        pass
