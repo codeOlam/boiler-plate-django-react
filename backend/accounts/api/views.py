@@ -213,6 +213,18 @@ class PasswordResetApiView(generics.GenericAPIView):
         serializer = self.serializer_class(data=payload)
         serializer.is_valid(raise_exception=True)
 
+        serializer_payload = serializer.data
+
+        response_payload = {
+            'user_data': serializer_payload,
+            'status': {
+                'Message': 'Password reset email has been sent',
+                'code': f"{status.HTTP_201_CREATED} CREATED"
+            }
+        }
+
+        return Response(response_payload, status=status.HTTP_201_CREATED)
+
 
 class PasswordTokenVerifyApiView(generics.GenericAPIView):
     def get(self, request, uid, token):

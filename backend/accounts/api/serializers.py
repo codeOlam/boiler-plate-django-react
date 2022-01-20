@@ -80,35 +80,34 @@ class PasswordRestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     class Meta:
+        model = User
         fields = ['email']
 
     def validate(self, attrs):
-        try:
-            email = attrs['data'].get('email', '')
+        email = attrs['data'].get('email', '')
 
-            if User.objects.filter(email=email).exists():
-                user = User.objects.get(email=email)
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
 
-                uidb64 = urlsafe_base64_encode(user.id)
-                generate_token = PasswordResetTokenGenerator()
-                token = generate_token.make_token(user)
+            uidb64 = urlsafe_base64_encode(user.id)
+            generate_token = PasswordResetTokenGenerator()
+            token = generate_token.make_token(user)
 
-                current_sites = get_current_site(
-                    request=attrs['data'].get('request'))
-                relative_link = reverse('email-verify')
-                verify_email_url = 'http://'+current_sites.domain + \
-                    relative_link+"?token="+str(token)
-                email_body = 'Hi '+user.email + \
-                    ' \nUse link below to verify your email \n'+verify_email_url
+            current_sites = get_current_site(
+                request=attrs['data'].get('request'))
+            relative_link = reverse(
+                'password-token-verify', kwarg={'uidb64': uidb64, 'token': token})
+            verify_password_url = 'http://'+current_sites.domain + \
+                relative_link+"?token="+str(token)
+            email_body = 'Hi '+user.email + \
+                ' \nUse link below to reset your password \n'+verify_password_url
 
-                email_data = {
-                    'email_subject': 'Resent verification email',
-                    'email_body': email_body,
-                    'to_email': user.email,
-                }
+            email_data = {
+                'email_subject': 'Password Reset',
+                'email_body': email_body,
+                'to_email': user.email,
+            }
 
-                Util.send_email(email_data)
-            return attrs
-        except:
-            pass
+            Util.send_email(email_data)
+
         return super().validate(attrs)
