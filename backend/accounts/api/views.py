@@ -169,6 +169,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
                     'message': 'Verification email has been resent to your email',
                     'code': f"{status.HTTP_201_CREATED} CREATED"
                 },
+                'response_code': status.HTTP_201_CREATED,
             }
             return Response(response_payload, status=status.HTTP_201_CREATED)
 
@@ -178,6 +179,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
                     'error': 'This user does not exist.',
                     'code': f"{status.HTTP_404_NOT_FOUND} NOT_FOUND"
                 },
+                'response_code': status.HTTP_404_NOT_FOUND,
             }
             return Response(doesNotExist_response_payload, status=status.HTTP_404_NOT_FOUND)
 
@@ -202,7 +204,8 @@ class LoginApiView(generics.GenericAPIView):
                 'success': 'Login Successful',
                 'code': f"{status.HTTP_200_OK} OK"
             },
-            'token': tokens
+            'token': tokens,
+            'response_code': status.HTTP_200_OK,
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
@@ -247,7 +250,8 @@ class PasswordResetApiView(generics.GenericAPIView):
                 'status': {
                     'message': 'Password reset email has been sent',
                     'code': f"{status.HTTP_201_CREATED} CREATED"
-                }
+                },
+                'response_code': status.HTTP_201_CREATED,
             }
 
             return Response(response_payload, status=status.HTTP_201_CREATED)
@@ -256,7 +260,8 @@ class PasswordResetApiView(generics.GenericAPIView):
                 'status': {
                     'error': 'This user does not exist',
                     'code': f"{status.HTTP_404_NOT_FOUND} NOT_FOUND"
-                }
+                },
+                'response_code': status.HTTP_404_NOT_FOUND,
             }
 
             return Response(response_payload, status=status.HTTP_404_NOT_FOUND)
@@ -273,7 +278,8 @@ class PasswordTokenVerifyApiView(generics.GenericAPIView):
                     'status': {
                         'error': 'Token not valid, request a new token',
                         'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
-                    }
+                    },
+                    'response_code': status.HTTP_401_UNAUTHORIZED
                 }
 
                 return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
@@ -284,8 +290,9 @@ class PasswordTokenVerifyApiView(generics.GenericAPIView):
                     'code': f"{status.HTTP_200_OK} OK"
                 },
                 'uidb64': uidb64,
-                'token': token
-            }
+                'token': token,
+                'response_code': status.HTTP_200_OK,
+            },
 
             return Response(response_payload, status=status.HTTP_200_OK)
 
@@ -294,7 +301,8 @@ class PasswordTokenVerifyApiView(generics.GenericAPIView):
                 'status': {
                     'error': 'Token not valid, request a new token',
                     'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
-                }
+                },
+                'response_code': status.HTTP_401_UNAUTHORIZED,
             }
 
             return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
@@ -313,6 +321,7 @@ class ResetPasswordCompleteApiView(generics.GenericAPIView):
                 'success': 'Password reset successful',
                 'code': f"{status.HTTP_200_OK} OK"
             },
+            'response_code': status.HTTP_200_OK,
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
