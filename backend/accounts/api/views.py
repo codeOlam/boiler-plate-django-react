@@ -14,7 +14,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from accounts.models import User
-from accounts.utils import send_email
+from accounts.utils import send_email, compose_email
 from .serializers import (
     LoginSerializer,
     RegisterSerializer,
@@ -42,26 +42,34 @@ class RegisterApiView(generics.GenericAPIView):
 
         current_sites = get_current_site(request)
         relative_link = reverse('email-verify')
-        verify_email_url = 'http://'+current_sites.domain + \
+        composed_url = 'http://'+current_sites.domain + \
             relative_link+"?token="+str(token)
+        email_subject = 'Email Verification'
 
-        context = {
-            'user': user,
-            'site_name': current_sites.name,
-            'verify_email_url': verify_email_url
-        }
-        email_body = loader.render_to_string(
+        # context = {
+        #     'user': user,
+        #     'site_name': current_sites.name,
+        #     'composed_url': composed_url
+        # }
+        # email_body = loader.render_to_string(
+        #     'registration/verify-email.html',
+        #     context
+        # )
+
+        # email_data = {
+        #     'email_subject': 'Please Verify your email',
+        #     'email_body': email_body,
+        #     'to_email': user.email,
+        # }
+
+        # send_email(email_data)
+        compose_email(
+            user,
+            current_sites,
+            composed_url,
+            email_subject,
             'registration/verify-email.html',
-            context
         )
-
-        email_data = {
-            'email_subject': 'Please Verify your email',
-            'email_body': email_body,
-            'to_email': user.email,
-        }
-
-        send_email(email_data)
 
         response_payload = {
             'serializer_payload': serializer_payload,
@@ -147,7 +155,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
         try:
             user = User.objects.get(email=user_email)
 
-            if user.user.is_verified:
+            if user.is_verified:
                 return Response({'Message': 'This user is already verified'})
 
             # This is used becacuse it is long lived compaired to access token
@@ -155,22 +163,32 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
 
             current_sites = get_current_site(request)
             relative_link = reverse('email-verify')
-            verify_email_url = 'http://'+current_sites.domain + \
+            composed_url = 'http://'+current_sites.domain + \
                 relative_link+"?token="+str(token)
+
             email_body = 'Hi '+user.email + \
-                ' \nUse link below to verify your email \n'+verify_email_url
+                ' \nUse link below to verify your email \n'+composed_url
 
-            email_data = {
-                'email_subject': 'Resent verification email',
-                'email_body': email_body,
-                'to_email': user.email,
-            }
+            email_subject = 'Resent Email Verification'
 
-            send_email(email_data)
+            # email_data = {
+            #     'email_subject': 'Resent verification email',
+            #     'email_body': email_body,
+            #     'to_email': user.email,
+            # }
+
+            # send_email(email_data)
+            compose_email(
+                user,
+                current_sites,
+                composed_url,
+                email_subject,
+                in_line_content=email_body,
+            )
 
             response_payload = {
                 'status': {
-                    'message': 'Verification email has been resent to your email',
+                    'message': 'Verification link has been resent to your email',
                     'code': f"{status.HTTP_201_CREATED} CREATED"
                 },
                 'response_code': status.HTTP_201_CREATED,
@@ -233,19 +251,29 @@ class PasswordResetApiView(generics.GenericAPIView):
 
             current_sites = get_current_site(request)
             relative_link = reverse(
-                'password-token-verify', kwargs={'uidb64': uidb64, 'token': token})
-            verify_password_url = 'http://'+current_sites.domain + \
-                relative_link+"?token="+str(token)
-            email_body = 'Hi '+user.email + \
-                ' \nUse link below to reset your password \n'+verify_password_url
+                'password-token-verify',
+                kwargs={'uidb64': uidb64, 'token': token}
+            )
+            composed_url = 'http://'+current_sites.domain+relative_link
+            # email_body = 'Hi '+user.email + \
+            #     ' \nUse link below to reset your password \n'+composed_url
 
-            email_data = {
-                'email_subject': 'Password Reset',
-                'email_body': email_body,
-                'to_email': user.email,
-            }
+            email_subject = 'Reset Passowrd Link'
 
-            send_email(email_data)
+            # email_data = {
+            #     'email_subject': 'Password Reset',
+            #     'email_body': email_body,
+            #     'to_email': user.email,
+            # }
+
+            # send_email(email_data)
+            compose_email(
+                user,
+                current_sites,
+                composed_url,
+                email_subject,
+                'registration/reset-password.html',
+            )
 
             serializer_payload = serializer.data
 
