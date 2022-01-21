@@ -240,28 +240,18 @@ class PasswordResetApiView(generics.GenericAPIView):
                 'registration/reset-password.html',
             )
 
-            serializer_payload = serializer.data
+        serializer_payload = serializer.data
 
-            response_payload = {
-                'user_data': serializer_payload,
-                'status': {
-                    'message': 'Password reset email has been sent',
-                    'code': f"{status.HTTP_201_CREATED} CREATED"
-                },
-                'response_code': status.HTTP_201_CREATED,
-            }
+        response_payload = {
+            'user_data': serializer_payload,
+            'status': {
+                'message': 'Password reset email has been sent',
+                'code': f"{status.HTTP_201_CREATED} CREATED"
+            },
+            'response_code': status.HTTP_201_CREATED,
+        }
 
-            return Response(response_payload, status=status.HTTP_201_CREATED)
-        else:
-            response_payload = {
-                'status': {
-                    'error': 'This user does not exist',
-                    'code': f"{status.HTTP_404_NOT_FOUND} NOT_FOUND"
-                },
-                'response_code': status.HTTP_404_NOT_FOUND,
-            }
-
-            return Response(response_payload, status=status.HTTP_404_NOT_FOUND)
+        return Response(response_payload, status=status.HTTP_201_CREATED)
 
 
 class PasswordTokenVerifyApiView(generics.GenericAPIView):
