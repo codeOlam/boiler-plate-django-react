@@ -11,8 +11,10 @@ backend/core/db.sqlite3
 
 # dependencies
 /node_modules
+/node_modules/.bin
 /.pnp
 .pnp.js
+.bin/
 
 # testing
 /coverage
