@@ -1,7 +1,9 @@
 from django.urls import reverse
 from django.conf import settings
-from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import smart_str, smart_bytes, DjangoUnicodeDecodeError
 
 import jwt
 from rest_framework import generics, status, views
@@ -11,12 +13,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from accounts.models import User
-from accounts.utils import Util
+from accounts.utils import compose_email
 from .serializers import (
     LoginSerializer,
     RegisterSerializer,
     EmailVerificationSerializer,
-    ResendActivationEmailSerializer
+    ResendActivationEmailSerializer,
+    PasswordRestSerializer,
+    ResetPasswordCompleteSerializer,
 )
 
 
@@ -37,26 +41,17 @@ class RegisterApiView(generics.GenericAPIView):
 
         current_sites = get_current_site(request)
         relative_link = reverse('email-verify')
-        verify_email_url = 'http://'+current_sites.domain + \
+        composed_url = 'http://'+current_sites.domain + \
             relative_link+"?token="+str(token)
+        email_subject = 'Email Verification'
 
-        context = {
-            'user': user,
-            'site_name': current_sites.name,
-            'verify_email_url': verify_email_url
-        }
-        email_body = loader.render_to_string(
+        compose_email(
+            user,
+            current_sites,
+            composed_url,
+            email_subject,
             'registration/verify-email.html',
-            context
         )
-
-        email_data = {
-            'email_subject': 'Please Verify your email',
-            'email_body': email_body,
-            'to_email': user.email,
-        }
-
-        Util.send_email(email_data)
 
         response_payload = {
             'serializer_payload': serializer_payload,
@@ -64,6 +59,7 @@ class RegisterApiView(generics.GenericAPIView):
                 'message': 'Verification email has been sent to your email',
                 'code': f"{status.HTTP_201_CREATED} CREATED"
             },
+            'response_code': status.HTTP_201_CREATED,
         }
 
         return Response(
@@ -104,8 +100,9 @@ class VerifyEmailApiView(views.APIView):
             response_payload = {
                 'status': {
                     'success': 'Email successfully activate',
-                    'code': f"{status.status.HTTP_200_OK} OK"
+                    'code': f"{status.HTTP_200_OK} OK"
                 },
+                'response_code': status.HTTP_200_OK,
             }
             return Response(response_payload, status=status.HTTP_200_OK)
 
@@ -115,6 +112,7 @@ class VerifyEmailApiView(views.APIView):
                     'failed': 'Activation Link is expired!',
                     'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
                 },
+                'response_code': status.HTTP_401_UNAUTHORIZED,
             }
             return Response(expired_response_payload, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -124,11 +122,12 @@ class VerifyEmailApiView(views.APIView):
                     'error': 'Invalid Activation Link!',
                     'code': f"{status.HTTP_406_NOT_ACCEPTABLE} NOT_ACCEPTABLE"
                 },
+                'response_code': status.HTTP_406_NOT_ACCEPTABLE,
             }
             return Response(decodeError_response_payload, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 
-class ResendVerifyEmailViewApi(generics.GenericAPIView):
+class ResendVerifyEmailApiView(generics.GenericAPIView):
     serializer_class = ResendActivationEmailSerializer
 
     def post(self, request):
@@ -138,7 +137,7 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
         try:
             user = User.objects.get(email=user_email)
 
-            if user.user.is_verified:
+            if user.is_verified:
                 return Response({'Message': 'This user is already verified'})
 
             # This is used becacuse it is long lived compaired to access token
@@ -146,24 +145,28 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
 
             current_sites = get_current_site(request)
             relative_link = reverse('email-verify')
-            verify_email_url = 'http://'+current_sites.domain + \
+            composed_url = 'http://'+current_sites.domain + \
                 relative_link+"?token="+str(token)
+
             email_body = 'Hi '+user.email + \
-                ' \nUse link below to verify your email \n'+verify_email_url
+                ' \nUse link below to verify your email \n'+composed_url
 
-            email_data = {
-                'email_subject': 'Resent verification email',
-                'email_body': email_body,
-                'to_email': user.email,
-            }
+            email_subject = 'Resent Email Verification'
 
-            Util.send_email(email_data)
+            compose_email(
+                user,
+                current_sites,
+                composed_url,
+                email_subject,
+                in_line_content=email_body,
+            )
 
             response_payload = {
                 'status': {
-                    'message': 'Verification email has been resent to your email',
+                    'message': 'Verification link has been resent to your email',
                     'code': f"{status.HTTP_201_CREATED} CREATED"
                 },
+                'response_code': status.HTTP_201_CREATED,
             }
             return Response(response_payload, status=status.HTTP_201_CREATED)
 
@@ -173,6 +176,7 @@ class ResendVerifyEmailViewApi(generics.GenericAPIView):
                     'error': 'This user does not exist.',
                     'code': f"{status.HTTP_404_NOT_FOUND} NOT_FOUND"
                 },
+                'response_code': status.HTTP_404_NOT_FOUND,
             }
             return Response(doesNotExist_response_payload, status=status.HTTP_404_NOT_FOUND)
 
@@ -197,7 +201,115 @@ class LoginApiView(generics.GenericAPIView):
                 'success': 'Login Successful',
                 'code': f"{status.HTTP_200_OK} OK"
             },
-            'token': tokens
+            'token': tokens,
+            'response_code': status.HTTP_200_OK,
+        }
+
+        return Response(response_payload, status=status.HTTP_200_OK)
+
+
+class PasswordResetApiView(generics.GenericAPIView):
+    serializer_class = PasswordRestSerializer
+
+    def post(self, request):
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid()
+        email = payload['email']
+
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            generate_token = PasswordResetTokenGenerator()
+            token = generate_token.make_token(user)
+
+            current_sites = get_current_site(request)
+            relative_link = reverse(
+                'password-token-verify',
+                kwargs={'uidb64': uidb64, 'token': token}
+            )
+            composed_url = 'http://'+current_sites.domain+relative_link
+            email_subject = 'Reset Passowrd Link'
+
+            compose_email(
+                user,
+                current_sites,
+                composed_url,
+                email_subject,
+                'registration/reset-password.html',
+            )
+
+        serializer_payload = serializer.data
+
+        response_payload = {
+            'user_data': serializer_payload,
+            'status': {
+                'message': 'Password reset email has been sent',
+                'code': f"{status.HTTP_201_CREATED} CREATED"
+            },
+            'response_code': status.HTTP_201_CREATED,
+        }
+
+        return Response(response_payload, status=status.HTTP_201_CREATED)
+
+
+class PasswordTokenVerifyApiView(generics.GenericAPIView):
+    def get(self, request, uidb64, token):
+        try:
+
+            userId = smart_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(id=userId)
+
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                response_payload = {
+                    'status': {
+                        'error': 'Token not valid, request a new token',
+                        'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
+                    },
+                    'response_code': status.HTTP_401_UNAUTHORIZED
+                }
+
+                return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
+
+            response_payload = {
+                'status': {
+                    'success': 'Token is valid',
+                    'code': f"{status.HTTP_200_OK} OK"
+                },
+                'uidb64': uidb64,
+                'token': token,
+                'response_code': status.HTTP_200_OK,
+            },
+
+            return Response(response_payload, status=status.HTTP_200_OK)
+
+        except DjangoUnicodeDecodeError:
+            response_payload = {
+                'status': {
+                    'error': 'Token not valid, request a new token',
+                    'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
+                },
+                'response_code': status.HTTP_401_UNAUTHORIZED,
+            }
+
+            return Response(response_payload, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class ResetPasswordCompleteApiView(generics.GenericAPIView):
+    serializer_class = ResetPasswordCompleteSerializer
+
+    def patch(self, request):
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+
+        response_payload = {
+            'status': {
+                'success': 'Password reset successful',
+                'code': f"{status.HTTP_200_OK} OK"
+            },
+            'response_code': status.HTTP_200_OK,
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
