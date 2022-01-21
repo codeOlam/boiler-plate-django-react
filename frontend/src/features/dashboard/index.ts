@@ -1,0 +1,1 @@
+export const dash = 'Place holder for users dashboard'
