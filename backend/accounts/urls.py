@@ -7,6 +7,7 @@ from .api.views import (
     VerifyEmailApiView,
     ResendVerifyEmailApiView,
     LoginApiView,
+    LogoutApiView,
     PasswordResetApiView,
     PasswordTokenVerifyApiView,
     ResetPasswordCompleteApiView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path('email-verify/', VerifyEmailApiView.as_view(), name='email-verify'),
     path('resend-link/', ResendVerifyEmailApiView.as_view(), name='resend-link'),
     path('login/', LoginApiView.as_view(), name='login'),
+    path('logout/', LogoutApiView.as_view(), name='logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('password-reset/', PasswordResetApiView.as_view(), name='password-reset'),
     path(

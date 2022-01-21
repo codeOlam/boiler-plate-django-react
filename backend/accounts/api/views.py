@@ -6,11 +6,12 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import smart_str, smart_bytes, DjangoUnicodeDecodeError
 
 import jwt
-from rest_framework import generics, status, views
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics, status, views
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import User
 from accounts.utils import compose_email
@@ -21,6 +22,7 @@ from .serializers import (
     ResendActivationEmailSerializer,
     PasswordRestSerializer,
     ResetPasswordCompleteSerializer,
+    LogoutSerializer,
 )
 
 
@@ -313,3 +315,25 @@ class ResetPasswordCompleteApiView(generics.GenericAPIView):
         }
 
         return Response(response_payload, status=status.HTTP_200_OK)
+
+
+class LogoutApiView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        payload = request.data
+        serializer = self.serializer_class(data=payload)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        response_payload = {
+            'status': {
+                'success': 'Logged out successfully',
+                'code': f"{status.HTTP_204_NO_CONTENT} OK"
+            },
+            'response_code': status.HTTP_204_NO_CONTENT,
+        }
+
+        return Response(response_payload, status=status.HTTP_204_NO_CONTENT)
