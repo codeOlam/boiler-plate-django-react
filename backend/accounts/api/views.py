@@ -1,6 +1,5 @@
 from django.urls import reverse
 from django.conf import settings
-from django.template import loader
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -14,7 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from accounts.models import User
-from accounts.utils import send_email, compose_email
+from accounts.utils import compose_email
 from .serializers import (
     LoginSerializer,
     RegisterSerializer,
@@ -46,23 +45,6 @@ class RegisterApiView(generics.GenericAPIView):
             relative_link+"?token="+str(token)
         email_subject = 'Email Verification'
 
-        # context = {
-        #     'user': user,
-        #     'site_name': current_sites.name,
-        #     'composed_url': composed_url
-        # }
-        # email_body = loader.render_to_string(
-        #     'registration/verify-email.html',
-        #     context
-        # )
-
-        # email_data = {
-        #     'email_subject': 'Please Verify your email',
-        #     'email_body': email_body,
-        #     'to_email': user.email,
-        # }
-
-        # send_email(email_data)
         compose_email(
             user,
             current_sites,
@@ -171,13 +153,6 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
 
             email_subject = 'Resent Email Verification'
 
-            # email_data = {
-            #     'email_subject': 'Resent verification email',
-            #     'email_body': email_body,
-            #     'to_email': user.email,
-            # }
-
-            # send_email(email_data)
             compose_email(
                 user,
                 current_sites,
@@ -255,18 +230,8 @@ class PasswordResetApiView(generics.GenericAPIView):
                 kwargs={'uidb64': uidb64, 'token': token}
             )
             composed_url = 'http://'+current_sites.domain+relative_link
-            # email_body = 'Hi '+user.email + \
-            #     ' \nUse link below to reset your password \n'+composed_url
-
             email_subject = 'Reset Passowrd Link'
 
-            # email_data = {
-            #     'email_subject': 'Password Reset',
-            #     'email_body': email_body,
-            #     'to_email': user.email,
-            # }
-
-            # send_email(email_data)
             compose_email(
                 user,
                 current_sites,
@@ -300,8 +265,9 @@ class PasswordResetApiView(generics.GenericAPIView):
 
 
 class PasswordTokenVerifyApiView(generics.GenericAPIView):
-    def get(self, uidb64, token):
+    def get(self, request, uidb64, token):
         try:
+
             userId = smart_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=userId)
 
