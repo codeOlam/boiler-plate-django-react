@@ -4,6 +4,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import AuthenticationFailed
 
 from accounts.models import User
@@ -121,3 +122,21 @@ class ResetPasswordCompleteSerializer(serializers.Serializer):
                 'The password reset link is invalid',
                 401
             )
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField
+
+    class Meta:
+        fields = ['refresh_token']
+
+    def validate(self, attrs):
+        self.token = attrs['refresh_token']
+        return super().validate(attrs)
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+            return super().save(**kwargs)
+        except TokenError:
+            self.fail('Bad Token')
