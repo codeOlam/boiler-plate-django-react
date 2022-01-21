@@ -125,7 +125,7 @@ class ResetPasswordCompleteSerializer(serializers.Serializer):
 
 
 class LogoutSerializer(serializers.Serializer):
-    refresh_token = serializers.CharField
+    refresh_token = serializers.CharField()
 
     class Meta:
         fields = ['refresh_token']
