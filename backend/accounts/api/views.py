@@ -14,7 +14,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from accounts.models import User
-from accounts.utils import Util
+from accounts.utils import send_email
 from .serializers import (
     LoginSerializer,
     RegisterSerializer,
@@ -61,7 +61,7 @@ class RegisterApiView(generics.GenericAPIView):
             'to_email': user.email,
         }
 
-        Util.send_email(email_data)
+        send_email(email_data)
 
         response_payload = {
             'serializer_payload': serializer_payload,
@@ -162,7 +162,7 @@ class ResendVerifyEmailApiView(generics.GenericAPIView):
                 'to_email': user.email,
             }
 
-            Util.send_email(email_data)
+            send_email(email_data)
 
             response_payload = {
                 'status': {
@@ -241,7 +241,7 @@ class PasswordResetApiView(generics.GenericAPIView):
                 'to_email': user.email,
             }
 
-            Util.send_email(email_data)
+            send_email(email_data)
 
             serializer_payload = serializer.data
 
