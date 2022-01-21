@@ -69,6 +69,7 @@ class RegisterApiView(generics.GenericAPIView):
                 'message': 'Verification email has been sent to your email',
                 'code': f"{status.HTTP_201_CREATED} CREATED"
             },
+            'response_code': status.HTTP_201_CREATED,
         }
 
         return Response(
@@ -109,8 +110,9 @@ class VerifyEmailApiView(views.APIView):
             response_payload = {
                 'status': {
                     'success': 'Email successfully activate',
-                    'code': f"{status.status.HTTP_200_OK} OK"
+                    'code': f"{status.HTTP_200_OK} OK"
                 },
+                'response_code': status.HTTP_200_OK,
             }
             return Response(response_payload, status=status.HTTP_200_OK)
 
@@ -120,6 +122,7 @@ class VerifyEmailApiView(views.APIView):
                     'failed': 'Activation Link is expired!',
                     'code': f"{status.HTTP_401_UNAUTHORIZED} UNAUTHORIZED"
                 },
+                'response_code': status.HTTP_401_UNAUTHORIZED,
             }
             return Response(expired_response_payload, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -129,6 +132,7 @@ class VerifyEmailApiView(views.APIView):
                     'error': 'Invalid Activation Link!',
                     'code': f"{status.HTTP_406_NOT_ACCEPTABLE} NOT_ACCEPTABLE"
                 },
+                'response_code': status.HTTP_406_NOT_ACCEPTABLE,
             }
             return Response(decodeError_response_payload, status=status.HTTP_406_NOT_ACCEPTABLE)
 
