@@ -1,0 +1,8 @@
+@import '../abstracts/variables';
+@import './typography.scss';
+
+
+/* Set core body defaults */
+body {
+  font-family: $font;
+}
