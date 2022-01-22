@@ -20,15 +20,16 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
+  "baseUrl": ".",
+  "paths": {
+    "@/*": ["./*"]
+  },
   "include": [
     "**/*.ts", 
-    "**/*.tsx"
+    "**/*.tsx",
+    "src"
   ],
   "exclude": [
     "node_modules"
   ],
-  "baseUrl": ".",
-  "paths": {
-    "@/*": ["./*"]
-  }
 }
