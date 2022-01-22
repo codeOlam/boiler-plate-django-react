@@ -1,3 +1,5 @@
+import { Provider } from 'react-redux';
+
 import styles from './app.module.scss';
 
 function App() {
